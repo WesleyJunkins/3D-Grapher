@@ -35,6 +35,25 @@ async function createScene() {
     // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
     var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
 
+    // This creates the input text box
+    var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
+    var inputBoxWidth = 0.75;
+
+    var grid = new BABYLON.GUI.Grid();   
+    advancedTexture.addControl(grid); 
+
+    grid.addRowDefinition(0.9)
+    grid.addRowDefinition(35, true)
+
+    var input = new BABYLON.GUI.InputText();
+    input.width = inputBoxWidth;
+    input.maxWidth = 0.9;
+    input.height = "40px";
+    input.color = "red";
+    input.background = "white";
+    grid.addControl(input, 1, 0);  
+
     //A global object to hold the user's inputs in the browser console
     window.userInputs = {
         functionType: null,
@@ -64,9 +83,12 @@ async function createScene() {
         var planeSize;
         if (Math.abs(lowerBound) > Math.abs(upperBound)) {
             planeSize = lowerBound;
-            camera.setPosition(new BABYLON.Vector3(2 * planeSize + 10, 2 * planeSize + 10, 2 * planeSize + 10));
         } else {
             planeSize = upperBound;
+        };
+        if (functionType == 1) {
+            camera.setPosition(new BABYLON.Vector3(2 * planeSize + 10, 0, 0));
+        } else {
             camera.setPosition(new BABYLON.Vector3(2 * planeSize + 10, 2 * planeSize + 10, 2 * planeSize + 10));
         };
 
