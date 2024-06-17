@@ -40,45 +40,53 @@ async function createScene() {
 
     var inputBoxWidth = 0.75;
 
-    var grid = new BABYLON.GUI.Grid();   
-    advancedTexture.addControl(grid); 
+    var grid = new BABYLON.GUI.Grid();
+    advancedTexture.addControl(grid);
 
-    grid.addRowDefinition(0.9)
-    grid.addRowDefinition(35, true)
+    grid.addRowDefinition(0.90) //Row 0
+    grid.addRowDefinition(0.05) //Row 1
+    grid.addRowDefinition(0.05) //Row 2
 
-    var input = new BABYLON.GUI.InputText();
-    input.width = inputBoxWidth;
-    input.maxWidth = 0.9;
-    input.height = "40px";
-    input.color = "red";
-    input.background = "white";
-    grid.addControl(input, 1, 0);  
+    grid.addColumnDefinition(0.2) //Column 0
+    grid.addColumnDefinition(0.2) //Column 1
+    grid.addColumnDefinition(0.2) //Column 2
+    grid.addColumnDefinition(0.2) //Column 3
+    grid.addColumnDefinition(0.2) //Column 4
 
-    //A global object to hold the user's inputs in the browser console
-    window.userInputs = {
-        functionType: null,
-        equation: "",
-        lowerBound: 0,
-        upperBound: 100,
-        step: 1
-    };
 
-    //Set the user's parameters as the parameters for the parser
-    window.setInputParameters = function (functionType, equation, lowerBound, upperBound, step) {
-        window.userInputs.functionType = functionType;
-        window.userInputs.equation = equation;
-        window.userInputs.lowerBound = lowerBound || 0;
-        window.userInputs.upperBound = upperBound || 100;
-        window.userInputs.step = step || 1;
+    var equationInput = new BABYLON.GUI.InputText();
+    equationInput.width = inputBoxWidth;
+    equationInput.maxWidth = 0.9;
+    equationInput.height = "40px";
+    equationInput.color = "white";
+    equationInput.focusedColor = "white";
+    equationInput.focusedBackground = "black";
+    equationInput.background = "black";
+    equationInput.placeholderText = "Enter equation here...";
+    grid.addControl(equationInput, 1, -1)
 
-        //After setting the parameters, call the evaluate function
-        evaluateEquation();
-    };
+    //Listening for the enter key to be pressed. Then graphs the entered function
+    var isUsingInputBox = false;
+    canvas.addEventListener("keydown", function (e) {
+        if (e.key == "Enter") {
+            isUsingInputBox = true;
+            console.log("Begin evaluating");
+            evaluateEquation();
+            console.log("Evaluation complete");
+        }
+    });
+
+    var hasEvaluated = false; //Variable to determine if a graph has been created or not
 
     async function evaluateEquation() {
 
+        var functionType = 2 //UPDATE LATER
+        var equation = equationInput.text;
+        var lowerBound = -1; //UPDATE LATER
+        var upperBound = 1; //UPDATE LATER
+        var step = 0.01; //UPDATE LATER
+
         const parser = math.parser();
-        const { functionType, equation, lowerBound, upperBound, step } = window.userInputs;
 
         var planeSize;
         if (Math.abs(lowerBound) > Math.abs(upperBound)) {
@@ -96,47 +104,49 @@ async function createScene() {
             //2-Dimensional Functions
 
             //X-Axis
-            const xAxisPoints = [
-                new BABYLON.Vector3(0, 0, -(planeSize)),
-                new BABYLON.Vector3(0, 0, (planeSize)),
-            ]
-            const xAxis = BABYLON.MeshBuilder.CreateLines("lines", { points: xAxisPoints });
+            if (hasEvaluated == false) {
+                const xAxisPoints = [
+                    new BABYLON.Vector3(0, 0, -(planeSize)),
+                    new BABYLON.Vector3(0, 0, (planeSize)),
+                ]
+                const xAxis = BABYLON.MeshBuilder.CreateLines("lines", { points: xAxisPoints });
 
-            //Y-Axis
-            const yAxisPoints = [
-                new BABYLON.Vector3(0, -(planeSize), 0),
-                new BABYLON.Vector3(0, (planeSize), 0),
-            ]
-            const yAxis = BABYLON.MeshBuilder.CreateLines("lines", { points: yAxisPoints });
+                //Y-Axis
+                const yAxisPoints = [
+                    new BABYLON.Vector3(0, -(planeSize), 0),
+                    new BABYLON.Vector3(0, (planeSize), 0),
+                ]
+                const yAxis = BABYLON.MeshBuilder.CreateLines("lines", { points: yAxisPoints });
 
-            //Label axes
-            var fontData = await (await fetch("https://assets.babylonjs.com/fonts/Droid Sans_Regular.json")).json();
-            var XAxisLabel = BABYLON.MeshBuilder.CreateText("XAxisLabel", "X", fontData, {
-                size: 0.5,
-                resolution: 64,
-                depth: 0.1
-            });
-            XAxisLabel.billboardMode = 7;
-            XAxisLabel.position.x = 0;
-            XAxisLabel.position.y = 0;
-            XAxisLabel.position.z = (planeSize) + 1;
-            let XtextMaterial = new BABYLON.StandardMaterial("X Material", scene);
-            XtextMaterial.diffuseColor = BABYLON.Color3.Red();
-            XAxisLabel.material = XtextMaterial;
-            xAxis.color = new BABYLON.Color3(1, 0, 0);
-            var YAxisLabel = BABYLON.MeshBuilder.CreateText("YAxisLabel", "Y", fontData, {
-                size: 0.5,
-                resolution: 64,
-                depth: 0.1
-            });
-            YAxisLabel.billboardMode = 7;
-            YAxisLabel.position.x = 0;
-            YAxisLabel.position.y = (planeSize) + 1;
-            YAxisLabel.position.z = 0;
-            let YtextMaterial = new BABYLON.StandardMaterial("Y Material", scene);
-            YtextMaterial.diffuseColor = BABYLON.Color3.Blue();
-            YAxisLabel.material = YtextMaterial;
-            yAxis.color = new BABYLON.Color3(0, 0, 1);
+                //Label axes
+                var fontData = await (await fetch("https://assets.babylonjs.com/fonts/Droid Sans_Regular.json")).json();
+                var XAxisLabel = BABYLON.MeshBuilder.CreateText("XAxisLabel", "X", fontData, {
+                    size: 0.5,
+                    resolution: 64,
+                    depth: 0.1
+                });
+                XAxisLabel.billboardMode = 7;
+                XAxisLabel.position.x = 0;
+                XAxisLabel.position.y = 0;
+                XAxisLabel.position.z = (planeSize) + 1;
+                let XtextMaterial = new BABYLON.StandardMaterial("X Material", scene);
+                XtextMaterial.diffuseColor = BABYLON.Color3.Red();
+                XAxisLabel.material = XtextMaterial;
+                xAxis.color = new BABYLON.Color3(1, 0, 0);
+                var YAxisLabel = BABYLON.MeshBuilder.CreateText("YAxisLabel", "Y", fontData, {
+                    size: 0.5,
+                    resolution: 64,
+                    depth: 0.1
+                });
+                YAxisLabel.billboardMode = 7;
+                YAxisLabel.position.x = 0;
+                YAxisLabel.position.y = (planeSize) + 1;
+                YAxisLabel.position.z = 0;
+                let YtextMaterial = new BABYLON.StandardMaterial("Y Material", scene);
+                YtextMaterial.diffuseColor = BABYLON.Color3.Blue();
+                YAxisLabel.material = YtextMaterial;
+                yAxis.color = new BABYLON.Color3(0, 0, 1);
+            }
 
             //Convert equation into parser-readable format
             const newFormat = equation.replaceAll("x", "a");
@@ -164,86 +174,89 @@ async function createScene() {
 
             //Display the curve
             var li = BABYLON.Mesh.CreateLines('li', curve, scene);
+
         } else if (functionType === 2) {
             //3-Dimensional Functions
 
             //XY-Plane
-            const xyAbstractPlane = BABYLON.Plane.FromPositionAndNormal(new BABYLON.Vector3(0, 0, 0), new BABYLON.Vector3(0, 1, 0));
-            const xyPlane = BABYLON.MeshBuilder.CreatePlane("plane", { sourcePlane: xyAbstractPlane, sideOrientation: BABYLON.Mesh.DOUBLESIDE, height: 2 * planeSize, width: 2 * planeSize });
-            xyPlane.visibility = 0.1;
+            if (hasEvaluated == false) {
+                const xyAbstractPlane = BABYLON.Plane.FromPositionAndNormal(new BABYLON.Vector3(0, 0, 0), new BABYLON.Vector3(0, 1, 0));
+                const xyPlane = BABYLON.MeshBuilder.CreatePlane("plane", { sourcePlane: xyAbstractPlane, sideOrientation: BABYLON.Mesh.DOUBLESIDE, height: 2 * planeSize, width: 2 * planeSize });
+                xyPlane.visibility = 0.1;
 
-            //XZ-Plane
-            const xzAbstractPlane = BABYLON.Plane.FromPositionAndNormal(new BABYLON.Vector3(0, 0, 0), new BABYLON.Vector3(0, 0, 1));
-            const xzPlane = BABYLON.MeshBuilder.CreatePlane("plane", { sourcePlane: xzAbstractPlane, sideOrientation: BABYLON.Mesh.DOUBLESIDE, height: 2 * planeSize, width: 2 * planeSize });
-            xzPlane.visibility = 0.1;
+                //XZ-Plane
+                const xzAbstractPlane = BABYLON.Plane.FromPositionAndNormal(new BABYLON.Vector3(0, 0, 0), new BABYLON.Vector3(0, 0, 1));
+                const xzPlane = BABYLON.MeshBuilder.CreatePlane("plane", { sourcePlane: xzAbstractPlane, sideOrientation: BABYLON.Mesh.DOUBLESIDE, height: 2 * planeSize, width: 2 * planeSize });
+                xzPlane.visibility = 0.1;
 
-            //YZ-Plane
-            const yzAbstractPlane = BABYLON.Plane.FromPositionAndNormal(new BABYLON.Vector3(0, 0, 0), new BABYLON.Vector3(1, 0, 0));
-            const yzPlane = BABYLON.MeshBuilder.CreatePlane("plane", { sourcePlane: yzAbstractPlane, sideOrientation: BABYLON.Mesh.DOUBLESIDE, height: 2 * planeSize, width: 2 * planeSize });
-            yzPlane.visibility = 0.1;
+                //YZ-Plane
+                const yzAbstractPlane = BABYLON.Plane.FromPositionAndNormal(new BABYLON.Vector3(0, 0, 0), new BABYLON.Vector3(1, 0, 0));
+                const yzPlane = BABYLON.MeshBuilder.CreatePlane("plane", { sourcePlane: yzAbstractPlane, sideOrientation: BABYLON.Mesh.DOUBLESIDE, height: 2 * planeSize, width: 2 * planeSize });
+                yzPlane.visibility = 0.1;
 
-            //X-Axis
-            const xAxisPoints = [
-                new BABYLON.Vector3(-(planeSize), 0, 0),
-                new BABYLON.Vector3((planeSize), 0, 0),
-            ]
-            const xAxis = BABYLON.MeshBuilder.CreateLines("lines", { points: xAxisPoints });
+                //X-Axis
+                const xAxisPoints = [
+                    new BABYLON.Vector3(-(planeSize), 0, 0),
+                    new BABYLON.Vector3((planeSize), 0, 0),
+                ]
+                const xAxis = BABYLON.MeshBuilder.CreateLines("lines", { points: xAxisPoints });
 
-            //Y-Axis
-            const yAxisPoints = [
-                new BABYLON.Vector3(0, 0, -(planeSize)),
-                new BABYLON.Vector3(0, 0, (planeSize)),
-            ]
-            const yAxis = BABYLON.MeshBuilder.CreateLines("lines", { points: yAxisPoints });
+                //Y-Axis
+                const yAxisPoints = [
+                    new BABYLON.Vector3(0, 0, -(planeSize)),
+                    new BABYLON.Vector3(0, 0, (planeSize)),
+                ]
+                const yAxis = BABYLON.MeshBuilder.CreateLines("lines", { points: yAxisPoints });
 
-            //Z-Axis
-            const zAxisPoints = [
-                new BABYLON.Vector3(0, -(planeSize), 0),
-                new BABYLON.Vector3(0, (planeSize), 0),
-            ]
-            const zAxis = BABYLON.MeshBuilder.CreateLines("lines", { points: zAxisPoints });
+                //Z-Axis
+                const zAxisPoints = [
+                    new BABYLON.Vector3(0, -(planeSize), 0),
+                    new BABYLON.Vector3(0, (planeSize), 0),
+                ]
+                const zAxis = BABYLON.MeshBuilder.CreateLines("lines", { points: zAxisPoints });
 
-            //Label axes
-            var fontData = await (await fetch("https://assets.babylonjs.com/fonts/Droid Sans_Regular.json")).json();
-            var XAxisLabel = BABYLON.MeshBuilder.CreateText("XAxisLabel", "X", fontData, {
-                size: 0.5,
-                resolution: 64,
-                depth: 0.1
-            });
-            XAxisLabel.billboardMode = 7;
-            XAxisLabel.position.x = (planeSize) + 1;
-            XAxisLabel.position.y = 0;
-            XAxisLabel.position.z = 0;
-            let XtextMaterial = new BABYLON.StandardMaterial("X Material", scene);
-            XtextMaterial.diffuseColor = BABYLON.Color3.Red();
-            XAxisLabel.material = XtextMaterial;
-            xAxis.color = new BABYLON.Color3(1, 0, 0);
-            var YAxisLabel = BABYLON.MeshBuilder.CreateText("YAxisLabel", "Y", fontData, {
-                size: 0.5,
-                resolution: 64,
-                depth: 0.1
-            });
-            YAxisLabel.billboardMode = 7;
-            YAxisLabel.position.x = 0;
-            YAxisLabel.position.y = 0;
-            YAxisLabel.position.z = (planeSize) + 1;
-            let YtextMaterial = new BABYLON.StandardMaterial("Y Material", scene);
-            YtextMaterial.diffuseColor = BABYLON.Color3.Blue();
-            YAxisLabel.material = YtextMaterial;
-            yAxis.color = new BABYLON.Color3(0, 0, 1);
-            var ZAxisLabel = BABYLON.MeshBuilder.CreateText("ZAxisLabel", "Z", fontData, {
-                size: 0.5,
-                resolution: 64,
-                depth: 0.1
-            });
-            ZAxisLabel.billboardMode = 7;
-            ZAxisLabel.position.x = 0;
-            ZAxisLabel.position.y = (planeSize) + 1;
-            ZAxisLabel.position.z = 0;
-            let ZtextMaterial = new BABYLON.StandardMaterial("Z Material", scene);
-            ZtextMaterial.diffuseColor = BABYLON.Color3.Green();
-            ZAxisLabel.material = ZtextMaterial;
-            zAxis.color = new BABYLON.Color3(0, 1, 0);
+                //Label axes
+                var fontData = await (await fetch("https://assets.babylonjs.com/fonts/Droid Sans_Regular.json")).json();
+                var XAxisLabel = BABYLON.MeshBuilder.CreateText("XAxisLabel", "X", fontData, {
+                    size: 0.5,
+                    resolution: 64,
+                    depth: 0.1
+                });
+                XAxisLabel.billboardMode = 7;
+                XAxisLabel.position.x = (planeSize) + 1;
+                XAxisLabel.position.y = 0;
+                XAxisLabel.position.z = 0;
+                let XtextMaterial = new BABYLON.StandardMaterial("X Material", scene);
+                XtextMaterial.diffuseColor = BABYLON.Color3.Red();
+                XAxisLabel.material = XtextMaterial;
+                xAxis.color = new BABYLON.Color3(1, 0, 0);
+                var YAxisLabel = BABYLON.MeshBuilder.CreateText("YAxisLabel", "Y", fontData, {
+                    size: 0.5,
+                    resolution: 64,
+                    depth: 0.1
+                });
+                YAxisLabel.billboardMode = 7;
+                YAxisLabel.position.x = 0;
+                YAxisLabel.position.y = 0;
+                YAxisLabel.position.z = (planeSize) + 1;
+                let YtextMaterial = new BABYLON.StandardMaterial("Y Material", scene);
+                YtextMaterial.diffuseColor = BABYLON.Color3.Blue();
+                YAxisLabel.material = YtextMaterial;
+                yAxis.color = new BABYLON.Color3(0, 0, 1);
+                var ZAxisLabel = BABYLON.MeshBuilder.CreateText("ZAxisLabel", "Z", fontData, {
+                    size: 0.5,
+                    resolution: 64,
+                    depth: 0.1
+                });
+                ZAxisLabel.billboardMode = 7;
+                ZAxisLabel.position.x = 0;
+                ZAxisLabel.position.y = (planeSize) + 1;
+                ZAxisLabel.position.z = 0;
+                let ZtextMaterial = new BABYLON.StandardMaterial("Z Material", scene);
+                ZtextMaterial.diffuseColor = BABYLON.Color3.Green();
+                ZAxisLabel.material = ZtextMaterial;
+                zAxis.color = new BABYLON.Color3(0, 1, 0);
+            }
 
             //Convert equation into parser-readable format
             const newFormatx = equation.replaceAll("x", "a");
@@ -285,6 +298,8 @@ async function createScene() {
                 var li2 = BABYLON.Mesh.CreateLines('li2', curve2, scene);
             }
         }
+
+        hasEvaluated = true;
     }
 
     console.log("Please set the input parameters by calling 'setInputParameters(functionType, equation, lowerBound, upperBound, step)' in the console.");
